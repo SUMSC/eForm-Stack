@@ -1,4 +1,4 @@
-version: '2.2'
+version: '3.6'
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.7.1
@@ -18,6 +18,11 @@ services:
       - 9200:9200
     networks:
       - esnet
+    healthcheck:
+      test: curl http://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
   
   kibana:
     image: docker.elastic.co/kibana/kibana:6.7.1
@@ -33,6 +38,11 @@ services:
       - esnet
     depends_on: 
       - elasticsearch
+    healthcheck:
+      test: curl http://localhost:5601 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
   
   logstash:
     image: docker.elastic.co/logstash/logstash:6.7.1
@@ -45,6 +55,134 @@ services:
       test: bin/logstash -t
       interval: 60s
       timeout: 50s
+      retries: 5
+  
+  auditbeat:
+    image: docker.elastic.co/beats/auditbeat:6.7.1
+    container_name: auditbeat
+    command: -e --strict.perms=false # -e flag to log to stderr and disable syslog/file output
+    cap_add: ['AUDIT_CONTROL', 'AUDIT_READ']
+    # Auditbeat must run in the main process namespace.
+    pid: host
+    volumes:
+      - './scripts/setup-beat.sh:/usr/local/bin/setup-beat.sh:ro'
+    networks: 
+      - esnet
+    depends_on: 
+      - elasticsearch:  { condition: service_healthy }
+      - kibana:  { condition: service_healthy }
+    healthcheck:
+      test: auditbeat --strict.perms=false test config
+      interval: 30s
+      timeout: 15s
+      retries: 5
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:6.7.1
+    container_name: filebeat
+    command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
+    # If the host system has logs at "/var/log", mount them at "/mnt/log"
+    # inside the container, where Filebeat can find them.
+    # volumes: ['/var/log:/mnt/log:ro']
+    secrets:
+      - source: filebeat.yml
+        target: /usr/share/filebeat/filebeat.yml
+      - source: filebeat.keystore
+        target: /usr/share/filebeat/filebeat.keystore
+      - source: ca.crt
+        target: /usr/share/filebeat/certs/ca/ca.crt
+    volumes:
+      - './scripts/setup-beat.sh:/usr/local/bin/setup-beat.sh:ro'
+    networks: 
+      - esnet
+    depends_on: 
+      - elasticsearch:  { condition: service_healthy }
+      - kibana:  { condition: service_healthy }
+    healthcheck:
+      test: filebeat test config
+      interval: 30s
+      timeout: 15s
+      retries: 5
+
+  heartbeat:
+    image: docker.elastic.co/beats/heartbeat:6.7.1
+    container_name: heartbeat
+    command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
+    networks: 
+      - esnet
+    depends_on: 
+      - elasticsearch:  { condition: service_healthy }
+      - kibana:  { condition: service_healthy }
+    healthcheck:
+      test: heartbeat test config
+      interval: 30s
+      timeout: 15s
+      retries: 5
+
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:6.7.1
+    container_name: metricbeat
+    # The commented sections below enable Metricbeat to monitor the Docker host,
+    # rather than the Metricbeat container. It's problematic with Docker for
+    # Windows, however, since "/proc", "/sys" etc. don't exist on Windows.
+    # The same likely applies to OSX (needs testing).
+    # volumes:
+    #   - /proc:/hostfs/proc:ro
+    #   - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+    #   - /:/hostfs:ro
+    command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
+    networks: 
+      - esnet
+    depends_on: 
+      - elasticsearch:  { condition: service_healthy }
+      - kibana:  { condition: service_healthy }
+    healthcheck:
+      test: metricbeat test config
+      interval: 30s
+      timeout: 15s
+      retries: 5
+
+  packetbeat:
+    image: docker.elastic.co/beats/packetbeat:6.7.1
+    container_name: packetbeat
+    # Packetbeat needs some elevated privileges to capture network traffic.
+    # We'll grant them with POSIX capabilities.
+    cap_add: ['NET_RAW', 'NET_ADMIN']
+    # Use "host mode" networking to allow Packetbeat to capture traffic from
+    # the real network interface on the host, rather than being isolated to the
+    # container's virtual interface.
+    network_mode: host
+    # Since we did that, Packetbeat is not part of the "stack" Docker network
+    # that the other containers are connected to, and thus can't resolve the
+    # hostname "elasticsearch". Instead, we'll tell it to find Elasticsearch
+    # on "localhost", which is the Docker host machine in this context.
+    command: -e -E 'output.elasticsearch.hosts=["localhost:9200"]'
+    depends_on: 
+      - elasticsearch:  { condition: service_healthy }
+    command: --strict.perms=false -e -E output.elasticsearch.hosts="https://localhost:9200" # -e flag to log to stderr and disable syslog/file output
+    depends_on: 
+      - elasticsearch:  { condition: service_healthy }
+      - kibana:  { condition: service_healthy }
+    healthcheck:
+      test: packetbeat test config
+      interval: 30s
+      timeout: 15s
+      retries: 5
+
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:6.7.1
+    container_name: apm_server
+    ports: ['8200:8200']
+    networks: 
+      - esnet
+    command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
+    depends_on: 
+      - elasticsearch:  { condition: service_healthy }
+      - kibana:  { condition: service_healthy }
+    healthcheck:
+      test: curl --cacert /usr/share/elasticsearch/config/certs/ca/ca.crt -s https://localhost:8200/healthcheck >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
       retries: 5
 
 volumes:
