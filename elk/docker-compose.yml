@@ -64,8 +64,6 @@ services:
     cap_add: ['AUDIT_CONTROL', 'AUDIT_READ']
     # Auditbeat must run in the main process namespace.
     pid: host
-    volumes:
-      - './scripts/setup-beat.sh:/usr/local/bin/setup-beat.sh:ro'
     networks: 
       - esnet
     depends_on: 
@@ -84,15 +82,6 @@ services:
     # If the host system has logs at "/var/log", mount them at "/mnt/log"
     # inside the container, where Filebeat can find them.
     # volumes: ['/var/log:/mnt/log:ro']
-    secrets:
-      - source: filebeat.yml
-        target: /usr/share/filebeat/filebeat.yml
-      - source: filebeat.keystore
-        target: /usr/share/filebeat/filebeat.keystore
-      - source: ca.crt
-        target: /usr/share/filebeat/certs/ca/ca.crt
-    volumes:
-      - './scripts/setup-beat.sh:/usr/local/bin/setup-beat.sh:ro'
     networks: 
       - esnet
     depends_on: 
