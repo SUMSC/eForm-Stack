@@ -28,6 +28,10 @@ services:
       - SERVER_NAME=kibana
       - SERVER_HOST=localhost
       - ELASTICSEARCH_URL="http://elasticsearch:9200"
+    networks:
+      - esnet
+    depends_on: 
+      - elasticsearch
 
 volumes:
   esdata:
