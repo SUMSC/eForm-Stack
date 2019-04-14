@@ -88,6 +88,9 @@ services:
     # If the host system has logs at "/var/log", mount them at "/mnt/log"
     # inside the container, where Filebeat can find them.
     # volumes: ['/var/log:/mnt/log:ro']
+    secrets:
+      - source: filebeat.yml
+        target: /usr/share/filebeat/filebeat.yml
     networks: 
       - esnet
     depends_on: 
@@ -185,5 +188,15 @@ networks:
   esnet:
 
 secrets:
-   auditbeat.yml:
+  auditbeat.yml:
     file: ./config/auditbeat/auditbeat.yml
+  filebeat.yml:
+    file: ./config/filebeat/filebeat.yml
+  heartbeat.yml:
+    file: ./config/heartbeat/heartbeat.yml
+  metricbeat.yml:
+    file: ./config/metricbeat/metricbeat.yml
+  packetbeat.yml:
+    file: ./config/packetbeat/packetbeat.yml
+  apm-server.yml:
+    file: ./config/apm-server/apm-server.yml
