@@ -1,4 +1,4 @@
-version: '3.6'
+version: '2.4'
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.7.1
@@ -7,7 +7,7 @@ services:
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
       - "cluster.name=mynewclustername"
     ulimits:
       memlock:
@@ -39,7 +39,8 @@ services:
     networks:
       - esnet
     depends_on: 
-      - elasticsearch
+      elasticsearch: 
+          condition: service_healthy
     healthcheck:
       test: curl http://localhost:5601 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
       interval: 30s
@@ -52,7 +53,8 @@ services:
     networks: 
       - esnet
     depends_on: 
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     healthcheck:
       test: bin/logstash -t
       interval: 60s
@@ -67,14 +69,15 @@ services:
     # Auditbeat must run in the main process namespace.
     pid: host
     network_mode: host
-    secrets: 
-      - source: auditbeat.yml
-        target: /usr/share/auditbeat/auditbeat.yml
+    volumes: 
+      - ./config/auditbeat/auditbeat.yml:/usr/share/auditbeat/auditbeat.yml:ro
     # networks: 
     #   - esnet
     depends_on: 
-      - elasticsearch
-      - kibana
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
     healthcheck:
       test: auditbeat --strict.perms=false test config
       interval: 30s
@@ -88,14 +91,15 @@ services:
     # If the host system has logs at "/var/log", mount them at "/mnt/log"
     # inside the container, where Filebeat can find them.
     # volumes: ['/var/log:/mnt/log:ro']
-    secrets:
-      - source: filebeat.yml
-        target: /usr/share/filebeat/filebeat.yml
+    volumes: 
+      - ./config/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
     networks: 
       - esnet
     depends_on: 
-      - elasticsearch
-      - kibana
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
     healthcheck:
       test: filebeat test config
       interval: 30s
@@ -108,9 +112,13 @@ services:
     command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
     networks: 
       - esnet
+    volumes: 
+      - ./config/heartbeat/heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro
     depends_on: 
-      - elasticsearch
-      - kibana
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
     healthcheck:
       test: heartbeat test config
       interval: 30s
@@ -131,9 +139,13 @@ services:
     command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
     networks: 
       - esnet
+    volumes: 
+      - ./config/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
     depends_on: 
-      - elasticsearch
-      - kibana
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
     healthcheck:
       test: metricbeat test config
       interval: 30s
@@ -156,8 +168,12 @@ services:
     # on "localhost", which is the Docker host machine in this context.
     command: --strict.perms=false -e -E output.elasticsearch.hosts="https://localhost:9200" # -e flag to log to stderr and disable syslog/file output
     depends_on: 
-      - elasticsearch
-      - kibana
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    volumes: 
+      - ./config/packetbeat/packetbeat.yml:/usr/share/packetbeat/packetbeat.yml:ro
     healthcheck:
       test: packetbeat test config
       interval: 30s
@@ -170,10 +186,14 @@ services:
     ports: ['8200:8200']
     networks: 
       - esnet
+    volumes: 
+      - ./config/apm-server/apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
     command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
     depends_on: 
-      - elasticsearch  
-      - kibana
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
     healthcheck:
       test: curl  http://localhost:8200/healthcheck >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
       interval: 30s
@@ -187,16 +207,16 @@ volumes:
 networks:
   esnet:
 
-secrets:
-  auditbeat.yml:
-    file: ./config/auditbeat/auditbeat.yml
-  filebeat.yml:
-    file: ./config/filebeat/filebeat.yml
-  heartbeat.yml:
-    file: ./config/heartbeat/heartbeat.yml
-  metricbeat.yml:
-    file: ./config/metricbeat/metricbeat.yml
-  packetbeat.yml:
-    file: ./config/packetbeat/packetbeat.yml
-  apm-server.yml:
-    file: ./config/apm-server/apm-server.yml
+# secrets:
+#   auditbeat.yml:
+#     file: ./config/auditbeat/auditbeat.yml
+#   filebeat.yml:
+#     file: ./config/filebeat/filebeat.yml
+#   heartbeat.yml:
+#     file: ./config/heartbeat/heartbeat.yml
+#   metricbeat.yml:
+#     file: ./config/metricbeat/metricbeat.yml
+#   packetbeat.yml:
+#     file: ./config/packetbeat/packetbeat.yml
+#   apm-server.yml:
+#     file: ./config/apm-server/apm-server.yml
