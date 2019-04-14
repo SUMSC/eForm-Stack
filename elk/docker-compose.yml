@@ -22,12 +22,14 @@ services:
     healthcheck:
       test: if [[ `curl -o /dev/null --silent --write-out %{http_code} http://localhost:9200/_cluster/health` -eq 200 ]];then echo 0; else echo 1; fi
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 5
+      start_period: 10s
   
   kibana:
     image: docker.elastic.co/kibana/kibana:6.7.1
     hostname: kibana
+    restart: on_failure
     ports:
       - 5601:5601
     environment:
@@ -44,12 +46,14 @@ services:
     healthcheck:
       test: if [[ `curl -o /dev/null --silent --write-out %{http_code} http://localhost:5601/api/status` -eq 200 ]];then echo 0; else echo 1; fi
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 5
+      start_period: 10s
   
   logstash:
     image: docker.elastic.co/logstash/logstash:6.7.1
     container_name: logstash
+    restart: on_failure
     networks: 
       - esnet
     depends_on: 
@@ -69,6 +73,7 @@ services:
     # Auditbeat must run in the main process namespace.
     pid: host
     network_mode: host
+    restart: on_failure
     volumes: 
       - ./config/auditbeat/auditbeat.yml:/usr/share/auditbeat/auditbeat.yml:ro
     # networks: 
@@ -89,6 +94,7 @@ services:
   filebeat:
     image: docker.elastic.co/beats/filebeat:6.7.1
     container_name: filebeat
+    restart: on_failure
     command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
     # If the host system has logs at "/var/log", mount them at "/mnt/log"
     # inside the container, where Filebeat can find them.
@@ -113,6 +119,7 @@ services:
   heartbeat:
     image: docker.elastic.co/beats/heartbeat:6.7.1
     container_name: heartbeat
+    restart: on_failure
     command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
     networks: 
       - esnet
@@ -131,6 +138,7 @@ services:
 
   metricbeat:
     image: docker.elastic.co/beats/metricbeat:6.7.1
+    restart: on_failure
     container_name: metricbeat
     # The commented sections below enable Metricbeat to monitor the Docker host,
     # rather than the Metricbeat container. It's problematic with Docker for
@@ -158,6 +166,7 @@ services:
 
   packetbeat:
     image: docker.elastic.co/beats/packetbeat:6.7.1
+    restart: on_failure
     container_name: packetbeat
     # Packetbeat needs some elevated privileges to capture network traffic.
     # We'll grant them with POSIX capabilities.
@@ -188,6 +197,7 @@ services:
     image: docker.elastic.co/apm/apm-server:6.7.1
     container_name: apm_server
     ports: ['8200:8200']
+    restart: on_failure
     networks: 
       - esnet
     volumes: 
