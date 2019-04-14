@@ -65,7 +65,8 @@ services:
     # Auditbeat must run in the main process namespace.
     pid: host
     volumes: 
-      - config/auditbeat/auditbeat.yml:/usr/share/auditbeat/auditbeat.yml
+      - source: auditbeat.yml
+        target: /usr/share/auditbeat/auditbeat.yml
     networks: 
       - esnet
     depends_on: 
@@ -179,3 +180,7 @@ volumes:
 
 networks:
   esnet:
+
+secrets:
+   auditbeat.yml:
+    file: ./config/auditbeat/auditbeat.yml
