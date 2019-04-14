@@ -14,6 +14,17 @@ auditbeat.modules:
   - /sbin
   - /usr/sbin
   - /etc
+- module: system
+  datasets:
+    - host
+    - login
+    - package
+    - process
+    - socket
+    - user
+  period: 10s
+  state.period: 12h
+  user.detect_password_changes: true
 
 output.elasticsearch:
   hosts: ['localhost:9200']
