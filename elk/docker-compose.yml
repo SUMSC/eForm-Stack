@@ -60,7 +60,7 @@ services:
   auditbeat:
     image: docker.elastic.co/beats/auditbeat:6.7.1
     container_name: auditbeat
-    command: -e --strict.perms=false # -e flag to log to stderr and disable syslog/file output
+    command: setup -e --strict.perms=false # -e flag to log to stderr and disable syslog/file output
     cap_add: ['AUDIT_CONTROL', 'AUDIT_WRITE']
     # Auditbeat must run in the main process namespace.
     pid: host

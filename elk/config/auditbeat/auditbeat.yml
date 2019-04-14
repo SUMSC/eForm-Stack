@@ -1,3 +1,6 @@
+setup.dashboards:
+  setup.dashboards.enabled: true
+
 auditbeat.modules:
 
 - module: auditd
@@ -15,7 +18,7 @@ auditbeat.modules:
 output.elasticsearch:
   hosts: ['elasticsearch:9200']
   protocol: "http"
-  username: elastic
+  # username: elastic
   # Read PW from auditbeat.keystore
   #password: "${ELASTIC_PASSWORD}"
   #ssl.certificate_authorities: ["/usr/share/auditbeat/certs/ca/ca.crt"]
