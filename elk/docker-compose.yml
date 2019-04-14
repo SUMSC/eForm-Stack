@@ -42,7 +42,7 @@ services:
       elasticsearch: 
           condition: service_healthy
     healthcheck:
-      test: curl http://localhost:5601/status >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      test: STATUS_CODE=$(curl -o /dev/null --silent --write-out %{http_code} http://localhost:5601/status );if [ "$STATUS_CODE" -eq 200 ];then echo 1; else echo 0; fi
       interval: 30s
       timeout: 10s
       retries: 5
