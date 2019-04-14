@@ -64,6 +64,8 @@ services:
     cap_add: ['AUDIT_CONTROL', 'AUDIT_WRITE']
     # Auditbeat must run in the main process namespace.
     pid: host
+    volumes: 
+      - config/auditbeat/auditbeat.yml:/usr/share/auditbeat/auditbeat.yml
     networks: 
       - esnet
     depends_on: 
