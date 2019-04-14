@@ -84,8 +84,6 @@ services:
         condition: service_healthy
       kibana:
         condition: service_healthy
-      apm-server:
-        condition: service_healthy
     healthcheck:
       test: auditbeat --strict.perms=false test config
       interval: 30s
@@ -108,8 +106,6 @@ services:
       elasticsearch:
         condition: service_healthy
       kibana:
-        condition: service_healthy
-      apm-server:
         condition: service_healthy
     healthcheck:
       test: filebeat test config
