@@ -26,6 +26,9 @@ auditbeat.modules:
   state.period: 12h
   user.detect_password_changes: true
 
+processors:
+  - add_cloud_metadata: ~
+
 output.elasticsearch:
   hosts: ['localhost:9200']
   protocol: "http"

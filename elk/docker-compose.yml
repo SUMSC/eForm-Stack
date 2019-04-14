@@ -72,6 +72,7 @@ services:
     cap_add: ['AUDIT_CONTROL', 'AUDIT_WRITE']
     # Auditbeat must run in the main process namespace.
     pid: host
+    user: root
     network_mode: host
     restart: on-failure
     volumes: 
