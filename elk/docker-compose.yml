@@ -94,8 +94,8 @@ services:
     # If the host system has logs at "/var/log", mount them at "/mnt/log"
     # inside the container, where Filebeat can find them.
     # volumes: ['/var/log:/mnt/log:ro']
-    volumes: 
-      - ./config/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+    secrets: 
+      - filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
     networks: 
       - esnet
     depends_on: 
@@ -114,8 +114,8 @@ services:
     command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
     networks: 
       - esnet
-    volumes: 
-      - ./config/heartbeat/heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro
+    secrets:  
+      - heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro
     depends_on: 
       - elasticsearch
       - kibana
@@ -176,8 +176,8 @@ services:
     depends_on: 
       - elasticsearch
       - kibana
-    volumes: 
-      - ./config/packetbeat/packetbeat.yml:/usr/share/packetbeat/packetbeat.yml:ro
+    secrets:  
+      - packetbeat.yml:/usr/share/packetbeat/packetbeat.yml:ro
     healthcheck:
       test: packetbeat test config
       interval: 30s
@@ -191,8 +191,8 @@ services:
     restart: on-failure
     networks: 
       - esnet
-    volumes: 
-      - ./config/apm-server/apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
+    secrets: 
+      - apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
     command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
     depends_on: 
       - elasticsearch
