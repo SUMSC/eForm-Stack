@@ -1,5 +1,6 @@
 setup.dashboards:
   setup.dashboards.enabled: true
+  
 filebeat.config:
   prospectors:
     path: ${path.config}/prospectors.d/*.yml
