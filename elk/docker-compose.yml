@@ -63,29 +63,29 @@ services:
       timeout: 50s
       retries: 5
   
-  auditbeat:
-    image: docker.elastic.co/beats/auditbeat:6.7.1
-    container_name: auditbeat
-    command: -e --strict.perms=false # -e flag to log to stderr and disable syslog/file output
-    cap_add: ['AUDIT_CONTROL', 'AUDIT_READ']
-    # Auditbeat must run in the main process namespace.
-    pid: host
-    user: root
-    network_mode: host
-    restart: on-failure
-    secrets: 
-      - source: auditbeat.yml
-        target: /usr/share/auditbeat/auditbeat.yml
-    # networks: 
-    #   - esnet
-    depends_on: 
-      - elasticsearch
-      - kibana
-    healthcheck:
-      test: auditbeat --strict.perms=false test config
-      interval: 30s
-      timeout: 15s
-      retries: 5
+  # auditbeat:
+  #   image: docker.elastic.co/beats/auditbeat:6.7.1
+  #   container_name: auditbeat
+  #   command: -e --strict.perms=false # -e flag to log to stderr and disable syslog/file output
+  #   cap_add: ['AUDIT_CONTROL', 'AUDIT_READ']
+  #   # Auditbeat must run in the main process namespace.
+  #   pid: host
+  #   user: root
+  #   network_mode: host
+  #   restart: on-failure
+  #   secrets: 
+  #     - source: auditbeat.yml
+  #       target: /usr/share/auditbeat/auditbeat.yml
+  #   # networks: 
+  #   #   - esnet
+  #   depends_on: 
+  #     - elasticsearch
+  #     - kibana
+  #   healthcheck:
+  #     test: auditbeat --strict.perms=false test config
+  #     interval: 30s
+  #     timeout: 15s
+  #     retries: 5
 
   filebeat:
     image: docker.elastic.co/beats/filebeat:6.7.1
