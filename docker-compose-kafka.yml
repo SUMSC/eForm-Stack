@@ -176,6 +176,8 @@ services:
       KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
 
   kafka-manager:
+    hostname: manager
+    container_name: manager
     depends_on:
       - zookeeper
       - connect
