@@ -215,6 +215,8 @@ volumes:
 
 networks:
   esnet:
+    external: 
+      name: eform
 
 secrets:
   auditbeat.yml:
