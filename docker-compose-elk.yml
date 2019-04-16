@@ -193,7 +193,8 @@ services:
   apm-server:
     image: docker.elastic.co/apm/apm-server:6.7.1
     container_name: apm_server
-    ports: ['8200:8200']
+    ports: 
+      - '8200:8200'
     restart: on-failure
     networks: 
       - esnet
@@ -201,6 +202,8 @@ services:
       - source: apm-server.yml
         target: /usr/share/apm-server/apm-server.yml
     command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
+    volumes:
+      - './scripts/setup-apm-server.sh:/usr/local/bin/setup-apm-server.sh:ro'
     depends_on: 
       - elasticsearch
       - kibana
@@ -221,14 +224,14 @@ networks:
 
 secrets:
   auditbeat.yml:
-    file: ./config/auditbeat/auditbeat.yml
+    file: ./elk/config/auditbeat/auditbeat.yml
   filebeat.yml:
-    file: ./config/filebeat/filebeat.yml
+    file: ./elk/config/filebeat/filebeat.yml
   heartbeat.yml:
-    file: ./config/heartbeat/heartbeat.yml
+    file: ./elk/config/heartbeat/heartbeat.yml
   metricbeat.yml:
-    file: ./config/metricbeat/metricbeat.yml
+    file: ./elk/config/metricbeat/metricbeat.yml
   packetbeat.yml:
-    file: ./config/packetbeat/packetbeat.yml
+    file: ./elk/config/packetbeat/packetbeat.yml
   apm-server.yml:
-    file: ./config/apm-server/apm-server.yml
+    file: ./elk/config/apm-server/apm-server.yml

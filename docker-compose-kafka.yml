@@ -59,7 +59,7 @@ services:
     image: confluentinc/kafka-connect-datagen:latest
     restart: on-failure
     build:
-      context: .
+      context: ./kafka/connect/
       dockerfile: Dockerfile
     hostname: connect
     container_name: connect
