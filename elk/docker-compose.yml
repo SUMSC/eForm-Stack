@@ -189,25 +189,25 @@ services:
   #     timeout: 15s
   #     retries: 5
 
-  # apm-server:
-  #   image: docker.elastic.co/apm/apm-server:6.7.1
-  #   container_name: apm_server
-  #   ports: ['8200:8200']
-  #   restart: on-failure
-  #   networks: 
-  #     - esnet
-  #   secrets: 
-  #     - source: apm-server.yml
-  #       target: /usr/share/apm-server/apm-server.yml
-  #   command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
-  #   depends_on: 
-  #     - elasticsearch
-  #     - kibana
-  #   healthcheck:
-  #     test: if [[ `curl -o /dev/null --silent --write-out %{http_code} http://localhost:8200/healthcheck ` -eq 200 ]];then echo 0; else echo 1; fi
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 5
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:6.7.1
+    container_name: apm_server
+    ports: ['8200:8200']
+    restart: on-failure
+    networks: 
+      - esnet
+    secrets: 
+      - source: apm-server.yml
+        target: /usr/share/apm-server/apm-server.yml
+    command: --strict.perms=false -e  # -e flag to log to stderr and disable syslog/file output
+    depends_on: 
+      - elasticsearch
+      - kibana
+    healthcheck:
+      test: if [[ `curl -o /dev/null --silent --write-out %{http_code} http://localhost:8200/healthcheck ` -eq 200 ]];then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   esdata:
